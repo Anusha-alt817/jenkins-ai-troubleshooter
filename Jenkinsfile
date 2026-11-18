@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -34,28 +33,52 @@ pipeline {
             echo 'Jenkins pipeline execution completed.'
             echo "Build result: ${currentBuild.currentResult}"
 
-            withCredentials([
-                usernamePassword(
-                    credentialsId: 'jenkins-api-creds',
-                    usernameVariable: 'JENKINS_USER',
-                    passwordVariable: 'JENKINS_TOKEN'
-                )
-            ]) {
-                script {
-                    def logStatus = sh(
+            script {
+                def logStatus
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'jenkins-api-creds',
+                        usernameVariable: 'JENKINS_USER',
+                        passwordVariable: 'JENKINS_TOKEN'
+                    )
+                ]) {
+                    logStatus = sh(
                         returnStatus: true,
                         script: 'python3 scripts/jenkins_log_collector.py'
                     )
+                }
 
-                    if (logStatus == 0) {
-                        echo 'Jenkins logs collected successfully.'
+                if (logStatus == 0) {
+                    echo 'Jenkins logs collected successfully.'
 
-                        sh '''
+                    def processorStatus = sh(
+                        returnStatus: true,
+                        script: '''
                             LOG_DIR="$WORKSPACE/logs" python3 scripts/log_processor.py
                         '''
+                    )
+
+                    if (processorStatus == 0) {
+                        echo 'Jenkins log processing completed.'
+
+                        def aiStatus = sh(
+                            returnStatus: true,
+                            script: '''
+                                LOG_DIR="$WORKSPACE/logs" python3 scripts/ai_analyzer.py
+                            '''
+                        )
+
+                        if (aiStatus == 0) {
+                            echo 'AI incident analysis completed.'
+                        } else {
+                            echo 'WARNING: AI incident analysis failed.'
+                        }
                     } else {
-                        echo 'WARNING: Jenkins log collection failed.'
+                        echo 'WARNING: Jenkins log processing failed.'
                     }
+                } else {
+                    echo 'WARNING: Jenkins log collection failed.'
                 }
             }
         }

@@ -5,7 +5,12 @@ LOG_DIR = os.getenv("LOG_DIR", "logs")
 
 def process_logs():
 
+    build_number = os.getenv("BUILD_NUMBER")
+
     for filename in os.listdir(LOG_DIR):
+
+        if build_number and filename != f"jenkins-build-{build_number}.log":
+            continue
 
         if not filename.endswith(".log"):
             continue
