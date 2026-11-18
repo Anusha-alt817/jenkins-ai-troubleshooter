@@ -1,0 +1,22 @@
+# Maven generated files
+app/target/
+
+# Logs
+*.log
+logs/
+
+# Python virtual environments
+venv/
+.venv/
+
+# Environment variables and secrets
+.env
+*.pem
+*.key
+
+# IDE files
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
