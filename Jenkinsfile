@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -33,6 +34,27 @@ pipeline {
         always {
             echo 'Jenkins pipeline execution completed.'
             echo "Build result: ${currentBuild.currentResult}"
+
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'jenkins-api-creds',
+                    usernameVariable: 'JENKINS_USER',
+                    passwordVariable: 'JENKINS_TOKEN'
+                )
+            ]) {
+                script {
+                    def logStatus = sh(
+                        returnStatus: true,
+                        script: 'python3 scripts/jenkins_log_collector.py'
+                    )
+
+                    if (logStatus == 0) {
+                        echo 'Jenkins logs collected successfully.'
+                    } else {
+                        echo 'WARNING: Jenkins log collection failed.'
+                    }
+                }
+            }
         }
     }
 }
