@@ -7,7 +7,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo 'Source code checked out from GitHub'
@@ -50,6 +49,10 @@ pipeline {
 
                     if (logStatus == 0) {
                         echo 'Jenkins logs collected successfully.'
+
+                        sh '''
+                            LOG_DIR="$WORKSPACE/logs" python3 scripts/log_processor.py
+                        '''
                     } else {
                         echo 'WARNING: Jenkins log collection failed.'
                     }
